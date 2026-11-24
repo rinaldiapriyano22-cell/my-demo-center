@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Dashboard | My Demo Center</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#142b49}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:245px;background:#142b49;color:white;padding:25px 17px;flex-shrink:0}
+.brand{font-size:19px;font-weight:bold;margin-bottom:35px}
+.brand span{color:#20c5c7}
+.menu-title{font-size:10px;color:#9db1c8;margin:25px 10px 12px;letter-spacing:1.5px}
+.menu a{display:block;text-decoration:none;color:#d4dfeb;padding:13px 12px;border-radius:8px;font-size:14px;margin:5px 0}
+.menu a.active,.menu a:hover{background:#244563;color:#4ce0da}
+.main{flex:1;min-width:0}
+.topbar{height:70px;background:white;border-bottom:1px solid #e7edf3;display:flex;align-items:center;justify-content:space-between;padding:0 30px}
+.topbar strong{font-size:14px}
+.logout{border:1px solid #dce3ed;background:white;padding:10px 15px;border-radius:8px;cursor:pointer;color:#142b49}
+.content{padding:30px}
+.heading{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:25px;margin:0 0 8px}
+.muted{font-size:13px;color:#8996a8}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin:28px 0}
+.card{background:white;padding:23px;border:1px solid #e9eef4;border-radius:13px}
+.card-label{font-size:13px;color:#8290a3}
+.card-number{font-size:30px;font-weight:bold;margin-top:12px}
+.section{background:white;border:1px solid #e9eef4;border-radius:13px;padding:22px;margin-top:20px}
+.section h2{font-size:17px;margin:0 0 17px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:13px 10px;border-bottom:1px solid #edf1f5;font-size:13px}
+th{color:#8290a3;font-weight:600}
+.status{color:#13844c;background:#e7f7ee;padding:5px 9px;border-radius:20px;font-size:11px}
+.empty{text-align:center;color:#8996a8;padding:25px}
+.notice{padding:12px;background:#effafa;color:#277f83;border-radius:8px;font-size:12px;margin-top:15px}
+#loading{padding:40px;text-align:center}
+@media(max-width:700px){
+ .sidebar{width:65px;padding:20px 7px}
+ .brand{font-size:0;text-align:center}
+ .brand span{font-size:21px}
+ .menu-title{display:none}
+ .menu a{font-size:0;text-align:center;padding:14px 2px}
+ .menu a::first-letter{font-size:17px}
+ .topbar{padding:0 13px}
+ .content{padding:18px 12px}
+ .stats{grid-template-columns:1fr}
+ .card{padding:17px}
+}
+</style>
+</head>
+<body>
+
+<div id="loading">Memeriksa akses administrator...</div>
+
+<div class="layout" id="app" style="display:none">
+<aside class="sidebar">
+ <div class="brand">MY DEMO <span>CENTER</span></div>
+ <div class="menu-title">MAIN MENU</div>
+ <nav class="menu">
+  <a class="active" href="/admin/">▦ Dashboard</a>
+  <a href="/admin/products/">▣ Kelola Produk</a>
+  <a href="/admin/categories/">▤ Kategori</a>
+  <a href="/admin/users/">♙ Pengguna Demo</a>
+  <a href="/admin/activity/">◷ Aktivitas</a>
+ </nav>
+ <div class="menu-title">SYSTEM</div>
+ <nav class="menu">
+  <a href="/admin/settings/">⚙ Pengaturan</a>
+ </nav>
+</aside>
+
+<main class="main">
+ <header class="topbar">
+  <strong>Administrator Panel</strong>
+  <button class="logout" id="logout">Logout ↗</button>
+ </header>
+
+ <div class="content">
+  <div class="heading">
+   <div>
+    <h1>Dashboard</h1>
+    <p class="muted">Selamat datang di pusat kendali My Demo Center.</p>
+   </div>
+   <span class="status">● Super Admin</span>
+  </div>
+
+  <div class="stats">
+   <div class="card">
+    <div class="card-label">Total Aplikasi</div>
+    <div class="card-number" id="productsCount">-</div>
+   </div>
+   <div class="card">
+    <div class="card-label">Kategori</div>
+    <div class="card-number" id="categoriesCount">-</div>
+   </div>
+   <div class="card">
+    <div class="card-label">Pengguna Terdaftar</div>
+    <div class="card-number" id="usersCount">-</div>
+   </div>
+  </div>
+
+  <div class="section">
+   <h2>Informasi Administrator</h2>
+   <p class="muted" id="adminEmail">Memuat akun...</p>
+   <div class="notice">Akses administrator terverifikasi melalui Supabase.</div>
+  </div>
+
+  <div class="section">
+   <h2>Aplikasi Terbaru</h2>
+   <div style="overflow-x:auto">
+    <table>
+     <thead>
+      <tr>
+       <th>Nama Aplikasi</th>
+       <th>Status</th>
+       <th>Akses</th>
+      </tr>
+     </thead>
+     <tbody id="productsTable">
+      <tr><td colspan="3" class="empty">Memuat data...</td></tr>
+     </tbody>
+    </table>
+   </div>
+  </div>
+ </div>
+</main>
+</div>
+
+<script type="module">
+import {createClient} from
+'https://esm.sh/@supabase/supabase-js@2';
+
+const URL='https://vixuldydntdjkcibryst.supabase.co';
+const KEY='sb_publishable_F5NS97tsE32a1yiiQ4Hsow_49c0aLgL';
+
+const supabase=createClient(URL,KEY);
+
+async function start(){
+ const {data:{session},error}=await supabase.auth.getSession();
+
+ if(error || !session){
+  location.replace('/');
+  return;
+ }
+
+ const {data:profile,error:profileError}=await supabase
+  .from('profiles')
+  .select('role,is_active')
+  .eq('id',session.user.id)
+  .single();
+
+ if(profileError || !profile || profile.role!=='admin' || !profile.is_active){
+  await supabase.auth.signOut();
+  location.replace('/');
+  return;
+ }
+
+ document.getElementById('loading').style.display='none';
+ document.getElementById('app').style.display='flex';
+ document.getElementById('adminEmail').textContent=session.user.email;
+
+ await loadDashboard();
+}
+
+async function loadDashboard(){
+ const queries=await Promise.all([
+  supabase.from('products').select('*',{count:'exact',head:true}),
+  supabase.from('categories').select('*',{count:'exact',head:true}),
+  supabase.from('profiles').select('*',{count:'exact',head:true}),
+  supabase.from('products')
+   .select('name,status,access_type')
+   .order('created_at',{ascending:false})
+   .limit(5)
+ ]);
+
+ document.getElementById('productsCount').textContent=
+  queries[0].error?'!':queries[0].count??0;
+
+ document.getElementById('categoriesCount').textContent=
+  queries[1].error?'!':queries[1].count??0;
+
+ document.getElementById('usersCount').textContent=
+  queries[2].error?'!':queries[2].count??0;
+
+ const table=document.getElementById('productsTable');
+
+ if(queries[3].error){
+  table.innerHTML='<tr><td colspan="3" class="empty">Data belum dapat dimuat.</td></tr>';
+  return;
+ }
+
+ const products=queries[3].data||[];
+
+ if(!products.length){
+  table.innerHTML='<tr><td colspan="3" class="empty">Belum ada aplikasi. Tambahkan produk pertama kamu nanti.</td></tr>';
+  return;
+ }
+
+ table.innerHTML=products.map(p=>`
+  <tr>
+   <td>${escapeHTML(p.name)}</td>
+   <td>${escapeHTML(p.status)}</td>
+   <td>${escapeHTML(p.access_type)}</td>
+  </tr>
+ `).join('');
+}
+
+function escapeHTML(value){
+ return String(value??'').replace(/[&<>"']/g,c=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;',
+  '"':'&quot;',"'":'&#39;'
+ }[c]));
+}
+
+document.getElementById('logout').addEventListener('click',async()=>{
+ await supabase.auth.signOut();
+ location.replace('/');
+});
+
+start();
+</script>
+</body>
+</html>
