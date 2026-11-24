@@ -3,97 +3,135 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Demo Center</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Demo Center | Login</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box}
 body{
-  font-family:Inter,Arial,sans-serif;
-  background:#f4f7fb;
-  color:#142b49;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
+ margin:0;min-height:100vh;
+ display:flex;align-items:center;justify-content:center;
+ padding:20px;background:#f4f7fb;
+ font-family:Arial,sans-serif;color:#142b49
 }
-.container{
-  width:100%;max-width:420px;
-  background:white;
-  padding:40px;
-  border-radius:20px;
-  box-shadow:0 15px 50px #142b4912;
+.login{
+ width:100%;max-width:420px;background:white;
+ padding:38px;border-radius:20px;
+ box-shadow:0 15px 45px #142b4915
 }
 .logo{
-  width:54px;height:54px;
-  background:#142b49;color:white;
-  display:grid;place-items:center;
-  border-radius:15px;
-  font-size:25px;margin-bottom:22px;
+ width:55px;height:55px;border-radius:15px;
+ background:#142b49;color:white;
+ display:grid;place-items:center;
+ font-size:27px;margin-bottom:25px
 }
-h1{font-size:25px;margin-bottom:8px}
-.subtitle{color:#8290a3;font-size:14px;margin-bottom:30px}
-label{display:block;font-size:13px;font-weight:600;margin:18px 0 8px}
+h1{font-size:25px;margin:0 0 9px}
+.subtitle{color:#8491a3;font-size:14px;margin-bottom:30px}
+label{display:block;font-size:13px;font-weight:bold;margin:18px 0 8px}
 input{
-  width:100%;padding:14px;
-  border:1px solid #dce3ed;
-  border-radius:9px;font-size:14px;
-  outline:none;
+ width:100%;padding:14px;border:1px solid #dce3ed;
+ border-radius:9px;font-size:14px;outline:none
 }
 input:focus{border-color:#20c5c7}
 button{
-  width:100%;padding:15px;
-  margin-top:25px;border:0;
-  border-radius:9px;
-  background:#142b49;color:white;
-  font-size:15px;font-weight:600;
-  cursor:pointer;
+ width:100%;padding:15px;margin-top:25px;
+ background:#142b49;color:white;border:0;
+ border-radius:9px;font-size:15px;font-weight:bold;
+ cursor:pointer
 }
-button:hover{background:#20436a}
-.footer{
-  text-align:center;color:#a0aaba;
-  font-size:11px;margin-top:28px;
-}
-.note{
-  margin-top:18px;
-  padding:12px;background:#effafa;
-  color:#277f83;border-radius:8px;
-  font-size:12px;line-height:1.5;
-}
+button:disabled{opacity:.6;cursor:wait}
+.message{font-size:13px;margin-top:15px;line-height:1.5}
+.footer{text-align:center;color:#a0aaba;font-size:11px;margin-top:28px}
 </style>
 </head>
 <body>
-<div class="container">
-  <div class="logo">✦</div>
-  <h1>MY DEMO CENTER</h1>
-  <p class="subtitle">Digital Product Showcase Platform</p>
+<div class="login">
+ <div class="logo">✦</div>
+ <h1>MY DEMO CENTER</h1>
+ <p class="subtitle">Digital Product Showcase Platform</p>
 
-  <form id="loginForm">
-    <label>Email Address</label>
-    <input type="email" placeholder="Masukkan email" required>
+ <form id="loginForm">
+  <label>Email Address</label>
+  <input id="email" type="email" placeholder="Masukkan email" required>
 
-    <label>Password</label>
-    <input type="password" placeholder="Masukkan password" required>
+  <label>Password</label>
+  <input id="password" type="password" placeholder="Masukkan password" required>
 
-    <button type="submit">Sign In →</button>
-  </form>
+  <button id="loginButton" type="submit">SIGN IN →</button>
+  <div id="message" class="message" role="status"></div>
+ </form>
 
-  <div class="note">
-    Secure Access. Login akan dihubungkan ke
-    Supabase pada tahap konfigurasi berikutnya.
-  </div>
-
-  <div class="footer">
-    © 2026 My Demo Center. All rights reserved.
-  </div>
+ <div class="footer">
+  Secure Access · © 2026 My Demo Center
+ </div>
 </div>
-<script>
-document.getElementById("loginForm")
-.addEventListener("submit",function(e){
-  e.preventDefault();
-  alert("Login belum aktif. Supabase akan dihubungkan pada tahap berikutnya.");
+
+<script type="module">
+import { createClient } from
+'https://esm.sh/@supabase/supabase-js@2';
+
+const SUPABASE_URL =
+'https://vixuldydntdjkcibryst.supabase.co';
+
+const SUPABASE_KEY =
+'PASTE_PUBLISHABLE_KEY_DI_SINI';
+
+const supabase = createClient(
+ SUPABASE_URL,
+ SUPABASE_KEY
+);
+
+const form = document.getElementById('loginForm');
+const button = document.getElementById('loginButton');
+const message = document.getElementById('message');
+
+form.addEventListener('submit', async function(e){
+ e.preventDefault();
+
+ button.disabled = true;
+ button.textContent = 'MEMERIKSA...';
+ message.textContent = '';
+
+ try {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  const {data,error} = await supabase.auth.signInWithPassword({
+   email,
+   password
+  });
+
+  if(error) throw error;
+
+  const {data:profile,error:profileError} = await supabase
+   .from('profiles')
+   .select('role,is_active')
+   .eq('id',data.user.id)
+   .single();
+
+  if(profileError || !profile || !profile.is_active){
+   await supabase.auth.signOut();
+   throw new Error('Akun tidak aktif atau profil tidak ditemukan.');
+  }
+
+  message.style.color = '#16834b';
+  message.textContent = 'Login berhasil. Mengalihkan...';
+
+  if(profile.role === 'admin'){
+   window.location.href = '/admin/';
+  }else{
+   window.location.href = '/demo/';
+  }
+
+ } catch(error){
+  message.style.color = '#d33';
+  message.textContent = error.message === 'Invalid login credentials'
+   ? 'Email atau password salah.'
+   : error.message;
+
+  button.disabled = false;
+  button.textContent = 'SIGN IN →';
+ }
 });
 </script>
 </body>
 </html>
-
