@@ -1,1 +1,99 @@
 
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Demo Center</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:Inter,Arial,sans-serif;
+  background:#f4f7fb;
+  color:#142b49;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.container{
+  width:100%;max-width:420px;
+  background:white;
+  padding:40px;
+  border-radius:20px;
+  box-shadow:0 15px 50px #142b4912;
+}
+.logo{
+  width:54px;height:54px;
+  background:#142b49;color:white;
+  display:grid;place-items:center;
+  border-radius:15px;
+  font-size:25px;margin-bottom:22px;
+}
+h1{font-size:25px;margin-bottom:8px}
+.subtitle{color:#8290a3;font-size:14px;margin-bottom:30px}
+label{display:block;font-size:13px;font-weight:600;margin:18px 0 8px}
+input{
+  width:100%;padding:14px;
+  border:1px solid #dce3ed;
+  border-radius:9px;font-size:14px;
+  outline:none;
+}
+input:focus{border-color:#20c5c7}
+button{
+  width:100%;padding:15px;
+  margin-top:25px;border:0;
+  border-radius:9px;
+  background:#142b49;color:white;
+  font-size:15px;font-weight:600;
+  cursor:pointer;
+}
+button:hover{background:#20436a}
+.footer{
+  text-align:center;color:#a0aaba;
+  font-size:11px;margin-top:28px;
+}
+.note{
+  margin-top:18px;
+  padding:12px;background:#effafa;
+  color:#277f83;border-radius:8px;
+  font-size:12px;line-height:1.5;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">✦</div>
+  <h1>MY DEMO CENTER</h1>
+  <p class="subtitle">Digital Product Showcase Platform</p>
+
+  <form id="loginForm">
+    <label>Email Address</label>
+    <input type="email" placeholder="Masukkan email" required>
+
+    <label>Password</label>
+    <input type="password" placeholder="Masukkan password" required>
+
+    <button type="submit">Sign In →</button>
+  </form>
+
+  <div class="note">
+    Secure Access. Login akan dihubungkan ke
+    Supabase pada tahap konfigurasi berikutnya.
+  </div>
+
+  <div class="footer">
+    © 2026 My Demo Center. All rights reserved.
+  </div>
+</div>
+<script>
+document.getElementById("loginForm")
+.addEventListener("submit",function(e){
+  e.preventDefault();
+  alert("Login belum aktif. Supabase akan dihubungkan pada tahap berikutnya.");
+});
+</script>
+</body>
+</html>
+
