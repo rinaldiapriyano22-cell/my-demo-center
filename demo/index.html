@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demo Dashboard | My Demo Center</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f7fb;color:#142b49;font-family:Arial,sans-serif}
+header{background:#142b49;color:white;padding:20px 5%;display:flex;justify-content:space-between;align-items:center}
+.brand{font-size:19px;font-weight:bold}
+.brand span{color:#20c5c7}
+button{cursor:pointer;border:0;border-radius:8px;padding:11px 16px}
+.logout{background:white;color:#142b49}
+main{max-width:1100px;margin:auto;padding:35px 20px}
+h1{font-size:27px;margin-bottom:8px}
+.muted{color:#8491a3;font-size:14px}
+.welcome{background:#142b49;color:white;padding:28px;border-radius:15px;margin:25px 0}
+.welcome p{color:#c6d6e6;font-size:14px}
+.section-title{margin:30px 0 17px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.card{background:white;border:1px solid #e6edf4;border-radius:14px;overflow:hidden}
+.preview{height:145px;background:linear-gradient(135deg,#142b49,#20c5c7);display:grid;place-items:center;color:white;font-size:38px}
+.card-body{padding:20px}
+.card h3{margin:0 0 9px;font-size:17px}
+.card p{font-size:13px;color:#8491a3;line-height:1.5}
+.open{background:#142b49;color:white;width:100%;margin-top:12px}
+.empty{background:white;border-radius:12px;padding:35px;text-align:center;color:#8491a3}
+#loading{text-align:center;padding:50px}
+footer{text-align:center;padding:25px;color:#9aa6b6;font-size:12px}
+</style>
+</head>
+<body>
+<div id="loading">Memeriksa akses demo...</div>
+
+<div id="app" style="display:none">
+<header>
+ <div class="brand">MY DEMO <span>CENTER</span></div>
+ <button class="logout" id="logout">Logout ↗</button>
+</header>
+
+<main>
+ <h1>Demo Dashboard</h1>
+ <p class="muted">Pusat aplikasi demo yang tersedia untuk akun kamu.</p>
+
+ <section class="welcome">
+  <h2>Selamat datang!</h2>
+  <p id="userEmail">Memuat akun...</p>
+  <p>Silakan pilih aplikasi yang telah diberikan akses untuk dicoba.</p>
+ </section>
+
+ <h2 class="section-title">Aplikasi Saya</h2>
+ <div id="products" class="grid">
+  <div class="empty">Memuat aplikasi...</div>
+ </div>
+</main>
+
+<footer>© 2026 My Demo Center · Digital Product Showcase</footer>
+</div>
+
+<script type="module">
+import {createClient} from
+'https://esm.sh/@supabase/supabase-js@2';
+
+const URL='https://vixuldydntdjkcibryst.supabase.co';
+const KEY='sb_publishable_F5NS97tsE32a1yiiQ4Hsow_49c0aLgL';
+const supabase=createClient(URL,KEY);
+
+const loading=document.getElementById('loading');
+const app=document.getElementById('app');
+const products=document.getElementById('products');
+
+function safe(value){
+ return String(value??'').replace(/[&<>"']/g,c=>({
+ '&':'&amp;','<':'&lt;','>':'&gt;',
+ '"':'&quot;',"'":'&#39;'
+ }[c]));
+}
+
+async function start(){
+ const {data:{session},error}=await supabase.auth.getSession();
+
+ if(error||!session){
+  location.replace('/');
+  return;
+ }
+
+ const {data:profile,error:profileError}=await supabase
+  .from('profiles')
+  .select('role,is_active')
+  .eq('id',session.user.id)
+  .single();
+
+ if(profileError||!profile||profile.role!=='demo_user'||!profile.is_active){
+  await supabase.auth.signOut();
+  location.replace('/');
+  return;
+ }
+
+ loading.style.display='none';
+ app.style.display='block';
+ document.getElementById('userEmail').textContent=session.user.email;
+
+ await loadProducts();
+}
+
+async function loadProducts(){
+ const {data:access,error}=await supabase
+  .from('demo_access')
+  .select('product_id,expires_at');
+
+ if(error){
+  products.innerHTML='<div class="empty">Tidak dapat memuat akses aplikasi.</div>';
+  return;
+ }
+
+ const valid=(access||[]).filter(x=>
+  !x.expires_at||new Date(x.expires_at)>new Date()
+ );
+
+ if(!valid.length){
+  products.innerHTML='<div class="empty">Belum ada aplikasi demo yang diberikan kepada akun ini. Silakan hubungi administrator.</div>';
+  return;
+ }
+
+ const ids=valid.map(x=>x.product_id);
+
+ const {data:items,error:productError}=await supabase
+  .from('products')
+  .select('id,name,description,thumbnail_url,demo_url')
+  .in('id',ids)
+  .eq('status','published');
+
+ if(productError){
+  products.innerHTML='<div class="empty">Data aplikasi belum dapat dimuat.</div>';
+  return;
+ }
+
+ if(!items?.length){
+  products.innerHTML='<div class="empty">Belum ada aplikasi demo aktif.</div>';
+  return;
+ }
+
+ products.innerHTML=items.map(p=>`
+  <article class="card">
+   <div class="preview">✦</div>
+   <div class="card-body">
+    <h3>${safe(p.name)}</h3>
+    <p>${safe(p.description||'Aplikasi digital My Demo Center')}</p>
+    <button class="open" data-id="${safe(p.id)}">Buka Aplikasi →</button>
+   </div>
+  </article>
+ `).join('');
+
+ products.querySelectorAll('button[data-id]').forEach(button=>{
+  button.addEventListener('click',()=>{
+   const item=items.find(x=>x.id===button.dataset.id);
+   if(item?.demo_url) location.href=item.demo_url;
+   else alert('Link demo belum disediakan administrator.');
+  });
+ });
+}
+
+document.getElementById('logout').addEventListener('click',async()=>{
+ await supabase.auth.signOut();
+ location.replace('/');
+});
+
+start();
+</script>
+</body>
+</html>
