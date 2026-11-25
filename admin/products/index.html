@@ -5,31 +5,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kelola Produk - My Demo Center</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#142b49}
-header{background:#142b49;color:white;padding:20px 28px;display:flex;justify-content:space-between;align-items:center}
-header a{color:#7ce5e3;text-decoration:none}
+body{margin:0;background:#f4f7fb;color:#142b49;font-family:Arial,sans-serif}
+header{background:#142b49;color:white;padding:18px 25px;display:flex;justify-content:space-between;align-items:center}
+header a{color:#36d5d2;text-decoration:none}
 main{max-width:1100px;margin:35px auto;padding:0 20px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
-h1{margin-bottom:8px}
+h1{margin:0 0 8px;font-size:28px}
 p{color:#718198}
-button{border:0;border-radius:8px;padding:12px 18px;background:#142b49;color:white;cursor:pointer}
-button:hover{opacity:.9}
-.panel{background:white;border:1px solid #e1e8f0;border-radius:14px;padding:22px;margin-top:25px}
-input,select,textarea{width:100%;padding:12px;border:1px solid #dce3ed;border-radius:8px;margin:7px 0 15px;font:inherit}
-label{font-size:13px;font-weight:bold}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-table{width:100%;border-collapse:collapse;margin-top:15px}
-th,td{text-align:left;padding:13px;border-bottom:1px solid #e8edf3;font-size:13px}
+.panel{background:white;border:1px solid #dce5ef;border-radius:15px;padding:24px;margin:25px 0}
+h2{font-size:19px;margin-top:0}
+label{display:block;font-size:13px;font-weight:bold;margin:15px 0 7px}
+input,textarea,select{width:100%;padding:12px;border:1px solid #d5dfeb;border-radius:8px;font-size:14px;background:white;color:#142b49}
+textarea{min-height:85px;resize:vertical}
+button{border:0;border-radius:8px;padding:11px 16px;background:#142b49;color:white;cursor:pointer;font-weight:bold}
+button:disabled{opacity:.5;cursor:wait}
+.secondary{background:#e8f2f7;color:#142b49}
+.danger{background:#c83e4d}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.message{font-size:14px;margin-top:12px;white-space:pre-wrap}
+table{width:100%;border-collapse:collapse;min-width:650px}
+th,td{text-align:left;padding:13px 10px;border-bottom:1px solid #e5ebf2;font-size:13px}
 th{color:#718198}
-.status{color:#16834b;font-weight:bold}
-#message{font-size:13px;margin-top:12px}
-@media(max-width:650px){.grid{grid-template-columns:1fr}main{margin-top:20px}.panel{overflow-x:auto}}
+.tablewrap{overflow-x:auto}
+.pill{display:inline-block;padding:5px 9px;border-radius:20px;background:#e8f7f3;color:#16834b;font-size:11px}
+.small{font-size:12px;color:#718198}
+@media(max-width:650px){.formgrid{grid-template-columns:1fr}main{margin:22px auto}.panel{padding:17px}}
 </style>
 </head>
 <body>
-
 <header>
   <strong>MY DEMO CENTER</strong>
   <a href="/admin/">← Kembali ke Dashboard</a>
@@ -39,73 +46,295 @@ th{color:#718198}
   <div class="top">
     <div>
       <h1>Kelola Produk</h1>
-      <p>Daftar aplikasi dan produk digital My Demo Center.</p>
+      <p>Kelola aplikasi dan produk digital My Demo Center.</p>
     </div>
-    <button onclick="document.getElementById('productForm').scrollIntoView({behavior:'smooth'})">
-      + Tambah Produk
-    </button>
+    <button onclick="newProduct()">+ Produk Baru</button>
   </div>
 
-  <section class="panel">
-    <h3>Tambah Aplikasi Baru</h3>
-
+  <section class="panel" id="formPanel">
+    <h2 id="formTitle">Tambah Aplikasi Baru</h2>
     <form id="productForm">
-      <div class="grid">
+      <input type="hidden" id="productId">
+
+      <div class="formgrid">
         <div>
-          <label>Nama Aplikasi</label>
+          <label>Nama Aplikasi *</label>
           <input id="name" required placeholder="Contoh: POS Frozen Food AI">
         </div>
         <div>
           <label>Kategori</label>
-          <input id="category" required placeholder="Contoh: Bisnis">
+          <select id="category">
+            <option value="">Tanpa kategori</option>
+          </select>
         </div>
       </div>
 
       <label>Deskripsi</label>
-      <textarea id="description" rows="3" placeholder="Jelaskan fungsi aplikasi"></textarea>
+      <textarea id="description" placeholder="Jelaskan fungsi aplikasi"></textarea>
 
-      <label>Alamat URL Demo</label>
-      <input id="url" type="url" placeholder="https://contoh.com">
+      <div class="formgrid">
+        <div>
+          <label>URL Gambar / Thumbnail</label>
+          <input id="thumbnail" type="url" placeholder="https://contoh.com/gambar.png">
+        </div>
+        <div>
+          <label>Alamat URL Demo</label>
+          <input id="demoUrl" type="url" placeholder="https://contoh.com">
+        </div>
+      </div>
 
-      <label>Status</label>
-      <select id="status">
-        <option value="active">Aktif</option>
-        <option value="draft">Draft</option>
-      </select>
+      <div class="formgrid">
+        <div>
+          <label>Jenis Akses</label>
+          <select id="accessType">
+            <option value="public">Publik</option>
+            <option value="private">Privat</option>
+          </select>
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="status">
+            <option value="draft">Draft</option>
+            <option value="published">Dipublikasikan</option>
+          </select>
+        </div>
+      </div>
 
-      <button type="submit">Simpan Produk</button>
-      <div id="message"></div>
+      <div class="actions">
+        <button type="submit" id="saveButton">Simpan Produk</button>
+        <button type="button" class="secondary" onclick="newProduct()">Batal</button>
+      </div>
+      <div id="formMessage" class="message"></div>
     </form>
   </section>
 
   <section class="panel">
-    <h3>Daftar Aplikasi</h3>
-    <p>Daftar ini masih berupa contoh tampilan. Penyimpanan database belum diaktifkan.</p>
-    <table>
-      <thead>
-        <tr>
-          <th>Nama Aplikasi</th>
-          <th>Kategori</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="productList">
-        <tr>
-          <td colspan="3">Belum ada produk tersimpan.</td>
-        </tr>
-      </tbody>
-    </table>
+    <h2>Kelola Kategori</h2>
+    <div class="formgrid">
+      <div>
+        <label>Nama Kategori Baru</label>
+        <input id="newCategory" placeholder="Contoh: Bisnis">
+      </div>
+      <div style="display:flex;align-items:end">
+        <button type="button" onclick="addCategory()">+ Tambah Kategori</button>
+      </div>
+    </div>
+    <div id="categoryMessage" class="message"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Daftar Aplikasi</h2>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama Aplikasi</th>
+            <th>Kategori</th>
+            <th>Akses</th>
+            <th>Status</th>
+            <th>Tindakan</th>
+          </tr>
+        </thead>
+        <tbody id="productList">
+          <tr><td colspan="5">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="listMessage" class="message"></div>
   </section>
 </main>
 
 <script>
-document.getElementById('productForm').addEventListener('submit',function(e){
-  e.preventDefault();
-  document.getElementById('message').style.color='#b45309';
-  document.getElementById('message').textContent=
-  'Formulir tampilan sudah berfungsi, tetapi penyimpanan database belum dihubungkan.';
-});
-</script>
+const SUPABASE_URL = 'https://vixuldydntdjkcibryst.supabase.co';
 
+// Ganti dengan Publishable Key yang sama seperti di file index.html utama.
+const SUPABASE_KEY = 'sb_publishable_F5NS97tsE32a1yiiQ4Hsow_49c0aLgL';
+
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let categories = [];
+let products = [];
+
+const el = id => document.getElementById(id);
+
+function slugify(text){
+  return text.toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-|-$/g,'');
+}
+
+function showMessage(id,text,ok=false){
+  el(id).textContent=text;
+  el(id).style.color=ok?'#16834b':'#c83e4d';
+}
+
+async function checkAdmin(){
+  const {data:{session},error} = await db.auth.getSession();
+  if(error || !session){
+    location.href='/';
+    return false;
+  }
+
+  const {data:profile,error:profileError} = await db
+    .from('profiles')
+    .select('role,is_active')
+    .eq('id',session.user.id)
+    .single();
+
+  if(profileError || !profile || profile.role!=='admin' || !profile.is_active){
+    alert('Akses hanya untuk Super Admin.');
+    location.href='/';
+    return false;
+  }
+  return true;
+}
+
+async function loadCategories(){
+  const {data,error}=await db.from('categories')
+    .select('id,name,slug').order('name');
+
+  if(error) throw error;
+  categories=data||[];
+
+  el('category').innerHTML='<option value="">Tanpa kategori</option>'+
+    categories.map(c=>`<option value="${c.id}">${escapeHTML(c.name)}</option>`).join('');
+}
+
+async function loadProducts(){
+  el('productList').innerHTML='<tr><td colspan="5">Memuat data...</td></tr>';
+
+  const {data,error}=await db.from('products')
+    .select('*,categories(name)')
+    .order('created_at',{ascending:false});
+
+  if(error) throw error;
+  products=data||[];
+
+  if(!products.length){
+    el('productList').innerHTML='<tr><td colspan="5">Belum ada produk tersimpan.</td></tr>';
+    return;
+  }
+
+  el('productList').innerHTML=products.map(p=>`
+    <tr>
+      <td><strong>${escapeHTML(p.name)}</strong><br><span class="small">${escapeHTML(p.slug)}</span></td>
+      <td>${escapeHTML(p.categories?.name||'-')}</td>
+      <td>${p.access_type==='private'?'Privat':'Publik'}</td>
+      <td><span class="pill">${p.status==='published'?'Dipublikasikan':'Draft'}</span></td>
+      <td>
+        <button class="secondary" onclick="editProduct('${p.id}')">Edit</button>
+        <button class="danger" onclick="deleteProduct('${p.id}')">Hapus</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function escapeHTML(value){
+  return String(value??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function newProduct(){
+  el('productForm').reset();
+  el('productId').value='';
+  el('formTitle').textContent='Tambah Aplikasi Baru';
+  el('saveButton').textContent='Simpan Produk';
+  el('formMessage').textContent='';
+}
+
+async function addCategory(){
+  const name=el('newCategory').value.trim();
+  if(!name){showMessage('categoryMessage','Masukkan nama kategori.');return;}
+
+  const slug=slugify(name);
+  const {error}=await db.from('categories').insert({name,slug});
+
+  if(error){showMessage('categoryMessage','Gagal: '+error.message);return;}
+
+  el('newCategory').value='';
+  showMessage('categoryMessage','Kategori berhasil ditambahkan.',true);
+  await loadCategories();
+}
+
+function editProduct(id){
+  const p=products.find(x=>x.id===id);
+  if(!p)return;
+
+  el('productId').value=p.id;
+  el('name').value=p.name||'';
+  el('category').value=p.category_id||'';
+  el('description').value=p.description||'';
+  el('thumbnail').value=p.thumbnail_url||'';
+  el('demoUrl').value=p.demo_url||'';
+  el('accessType').value=p.access_type||'public';
+  el('status').value=p.status||'draft';
+  el('formTitle').textContent='Edit Aplikasi';
+  el('saveButton').textContent='Simpan Perubahan';
+  el('formMessage').textContent='';
+  el('formPanel').scrollIntoView({behavior:'smooth'});
+}
+
+async function deleteProduct(id){
+  const p=products.find(x=>x.id===id);
+  if(!p || !confirm('Hapus aplikasi "'+p.name+'"?'))return;
+
+  const {error}=await db.from('products').delete().eq('id',id);
+  if(error){showMessage('listMessage','Gagal menghapus: '+error.message);return;}
+
+  showMessage('listMessage','Produk berhasil dihapus.',true);
+  await loadProducts();
+}
+
+el('productForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const button=el('saveButton');
+  button.disabled=true;
+  showMessage('formMessage','Menyimpan data...',true);
+
+  try{
+    const name=el('name').value.trim();
+    const id=el('productId').value;
+    const payload={
+      name,
+      slug:slugify(name),
+      category_id:el('category').value||null,
+      description:el('description').value.trim()||null,
+      thumbnail_url:el('thumbnail').value.trim()||null,
+      demo_url:el('demoUrl').value.trim()||null,
+      access_type:el('accessType').value,
+      status:el('status').value
+    };
+
+    let result;
+    if(id){
+      result=await db.from('products').update(payload).eq('id',id);
+    }else{
+      result=await db.from('products').insert(payload);
+    }
+
+    if(result.error)throw result.error;
+
+    showMessage('formMessage','Produk berhasil disimpan.',true);
+    newProduct();
+    await loadProducts();
+  }catch(error){
+    showMessage('formMessage','Gagal menyimpan: '+error.message);
+  }finally{
+    button.disabled=false;
+  }
+});
+
+(async()=>{
+  try{
+    const allowed=await checkAdmin();
+    if(!allowed)return;
+    await loadCategories();
+    await loadProducts();
+  }catch(error){
+    showMessage('listMessage','Gagal memuat data: '+error.message);
+  }
+})();
+</script>
 </body>
 </html>
