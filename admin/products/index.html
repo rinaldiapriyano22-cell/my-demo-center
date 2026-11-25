@@ -1,0 +1,111 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kelola Produk - My Demo Center</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#142b49}
+header{background:#142b49;color:white;padding:20px 28px;display:flex;justify-content:space-between;align-items:center}
+header a{color:#7ce5e3;text-decoration:none}
+main{max-width:1100px;margin:35px auto;padding:0 20px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap}
+h1{margin-bottom:8px}
+p{color:#718198}
+button{border:0;border-radius:8px;padding:12px 18px;background:#142b49;color:white;cursor:pointer}
+button:hover{opacity:.9}
+.panel{background:white;border:1px solid #e1e8f0;border-radius:14px;padding:22px;margin-top:25px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #dce3ed;border-radius:8px;margin:7px 0 15px;font:inherit}
+label{font-size:13px;font-weight:bold}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+table{width:100%;border-collapse:collapse;margin-top:15px}
+th,td{text-align:left;padding:13px;border-bottom:1px solid #e8edf3;font-size:13px}
+th{color:#718198}
+.status{color:#16834b;font-weight:bold}
+#message{font-size:13px;margin-top:12px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}main{margin-top:20px}.panel{overflow-x:auto}}
+</style>
+</head>
+<body>
+
+<header>
+  <strong>MY DEMO CENTER</strong>
+  <a href="/admin/">← Kembali ke Dashboard</a>
+</header>
+
+<main>
+  <div class="top">
+    <div>
+      <h1>Kelola Produk</h1>
+      <p>Daftar aplikasi dan produk digital My Demo Center.</p>
+    </div>
+    <button onclick="document.getElementById('productForm').scrollIntoView({behavior:'smooth'})">
+      + Tambah Produk
+    </button>
+  </div>
+
+  <section class="panel">
+    <h3>Tambah Aplikasi Baru</h3>
+
+    <form id="productForm">
+      <div class="grid">
+        <div>
+          <label>Nama Aplikasi</label>
+          <input id="name" required placeholder="Contoh: POS Frozen Food AI">
+        </div>
+        <div>
+          <label>Kategori</label>
+          <input id="category" required placeholder="Contoh: Bisnis">
+        </div>
+      </div>
+
+      <label>Deskripsi</label>
+      <textarea id="description" rows="3" placeholder="Jelaskan fungsi aplikasi"></textarea>
+
+      <label>Alamat URL Demo</label>
+      <input id="url" type="url" placeholder="https://contoh.com">
+
+      <label>Status</label>
+      <select id="status">
+        <option value="active">Aktif</option>
+        <option value="draft">Draft</option>
+      </select>
+
+      <button type="submit">Simpan Produk</button>
+      <div id="message"></div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h3>Daftar Aplikasi</h3>
+    <p>Daftar ini masih berupa contoh tampilan. Penyimpanan database belum diaktifkan.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Nama Aplikasi</th>
+          <th>Kategori</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="productList">
+        <tr>
+          <td colspan="3">Belum ada produk tersimpan.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<script>
+document.getElementById('productForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  document.getElementById('message').style.color='#b45309';
+  document.getElementById('message').textContent=
+  'Formulir tampilan sudah berfungsi, tetapi penyimpanan database belum dihubungkan.';
+});
+</script>
+
+</body>
+</html>
